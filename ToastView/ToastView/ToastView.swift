@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class ToastView: UIView {
+open class ToastView: UIView {
     lazy var messageLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
@@ -45,14 +45,30 @@ final class ToastView: UIView {
     
     static func showToast(with message: String?) {
         Task {
-            await ToastView().showToastOnMainActor(with: message)
+            let toast = ToastView()
+            toast.setString(with: message)
+            await toast.showToastOnMainActor()
         }
     }
     
-    @MainActor
-    private func showToastOnMainActor(with message: String?) async {
+    static func showToast(with message: NSAttributedString?) {
+        Task {
+            let toast = ToastView()
+            toast.setAttributedString(with: message)
+            await toast.showToastOnMainActor()
+        }
+    }
+    
+    private func setString(with message: String?) {
         self.messageLabel.text = message
-        
+    }
+    
+    private func setAttributedString(with message: NSAttributedString?) {
+        self.messageLabel.attributedText = message
+    }
+    
+    @MainActor
+    private func showToastOnMainActor() async {
         guard let window = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.keyWindow else { return }
         window.addSubview(self)
         self.translatesAutoresizingMaskIntoConstraints = false
